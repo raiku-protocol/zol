@@ -8,10 +8,10 @@ pub const entrypoint = @import("entrypoint.zig");
 pub const pda = @import("pda.zig");
 pub const cpi = @import("cpi.zig");
 pub const token = @import("token/mod.zig");
+pub const debug = @import("debug.zig");
 
 // Re-export commonly used types
 pub const ProgramError = errors.ProgramError;
-pub const ProgramResult = errors.ProgramResult;
 pub const SUCCESS = errors.SUCCESS;
 
 pub const Pubkey = types.Pubkey;

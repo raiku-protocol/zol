@@ -121,7 +121,7 @@ pub const EntrypointFn = *const fn (
     program_id: *const Pubkey,
     accounts: []AccountInfo,
     instruction_data: []align(8) u8,
-) errors.ProgramResult;
+) errors.ProgramError!void;
 
 /// Create a program entrypoint with custom max accounts
 pub fn entrypoint(

@@ -81,7 +81,7 @@ const SolAccountInfo = extern struct {
 pub fn invoke(
     instruction: *const Instruction,
     accounts: []const AccountInfo,
-) errors.ProgramResult {
+) errors.ProgramError!void {
     return invokeSigned(instruction, accounts, &[_][]const u8{});
 }
 
@@ -98,26 +98,7 @@ pub fn invokeSigned(
     instruction: *const Instruction,
     accounts: []const AccountInfo,
     signers_seeds: []const []const u8,
-) errors.ProgramResult {
-    // Validate that accounts in instruction match provided account infos
-    for (instruction.accounts) |account_meta| {
-        var found = false;
-        for (accounts) |account_info| {
-            if (types.pubkeyEq(account_meta.pubkey, account_info.key())) {
-                found = true;
-
-                // Check borrow state before CPI
-                if (account_meta.is_writable) {
-                    try account_info.canBorrowMutData();
-                }
-                break;
-            }
-        }
-        if (!found) {
-            return error.NotEnoughAccountKeys;
-        }
-    }
-
+) errors.ProgramError!void {
     // Convert instruction to C ABI format
     const sol_instruction = SolInstruction{
         .program_id = instruction.program_id,

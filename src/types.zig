@@ -1,7 +1,7 @@
 //! Core Solana types
 
 const std = @import("std");
-const errors = @import("errors.zig");
+const ProgramError = @import("errors.zig").ProgramError;
 
 /// Public key type
 pub const Pubkey = [32]u8;
@@ -159,7 +159,7 @@ pub const AccountInfo = struct {
     // Borrow checking methods
 
     /// Check if can borrow data immutably
-    pub fn canBorrowData(self: AccountInfo) errors.ProgramResult {
+    pub fn canBorrowData(self: AccountInfo) ProgramError!void {
         const borrow_state = self.raw.borrow_state;
 
         // Check if mutably borrowed
@@ -174,7 +174,7 @@ pub const AccountInfo = struct {
     }
 
     /// Check if can borrow data mutably
-    pub fn canBorrowMutData(self: AccountInfo) errors.ProgramResult {
+    pub fn canBorrowMutData(self: AccountInfo) ProgramError!void {
         const borrow_state = self.raw.borrow_state;
 
         // Check if any borrow exists
@@ -184,7 +184,7 @@ pub const AccountInfo = struct {
     }
 
     /// Check if can borrow lamports immutably
-    pub fn canBorrowLamports(self: AccountInfo) errors.ProgramResult {
+    pub fn canBorrowLamports(self: AccountInfo) ProgramError!void {
         const borrow_state = self.raw.borrow_state;
 
         // Check if mutably borrowed
@@ -199,7 +199,7 @@ pub const AccountInfo = struct {
     }
 
     /// Check if can borrow lamports mutably
-    pub fn canBorrowMutLamports(self: AccountInfo) errors.ProgramResult {
+    pub fn canBorrowMutLamports(self: AccountInfo) ProgramError!void {
         const borrow_state = self.raw.borrow_state;
 
         // Check if any borrow exists
@@ -230,70 +230,6 @@ pub const AccountInfo = struct {
     /// Borrow lamports mutably without checking (unsafe)
     pub fn borrowMutLamportsUnchecked(self: AccountInfo) *u64 {
         return &self.raw.lamports;
-    }
-
-    // Safe borrows with RAII guards
-
-    /// Borrow data immutably
-    pub fn tryBorrowData(self: AccountInfo) errors.ProgramError!Ref([]const u8) {
-        try self.canBorrowData();
-
-        const borrow_state_ptr = @as(*u8, @ptrCast(&self.raw.borrow_state));
-        // Decrement immutable borrow count
-        borrow_state_ptr.* -= 1 << DATA_BORROW_SHIFT;
-
-        const ptr = self.dataPtr();
-        return Ref([]const u8){
-            .value = ptr[0..self.dataLen()],
-            .state = borrow_state_ptr,
-            .borrow_shift = DATA_BORROW_SHIFT,
-        };
-    }
-
-    /// Borrow data mutably
-    pub fn tryBorrowMutData(self: AccountInfo) errors.ProgramError!RefMut([]u8) {
-        try self.canBorrowMutData();
-
-        const borrow_state_ptr = @as(*u8, @ptrCast(&self.raw.borrow_state));
-        // Set mutable borrow bit to 0
-        borrow_state_ptr.* &= 0b11110111;
-
-        const ptr = self.dataPtr();
-        return RefMut([]u8){
-            .value = ptr[0..self.dataLen()],
-            .state = borrow_state_ptr,
-            .borrow_bitmask = DATA_MUTABLE_BORROW_BITMASK,
-        };
-    }
-
-    /// Borrow lamports immutably
-    pub fn tryBorrowLamports(self: AccountInfo) errors.ProgramError!Ref(*const u64) {
-        try self.canBorrowLamports();
-
-        const borrow_state_ptr = @as(*u8, @ptrCast(&self.raw.borrow_state));
-        // Decrement immutable borrow count
-        borrow_state_ptr.* -= 1 << LAMPORTS_BORROW_SHIFT;
-
-        return Ref(*const u64){
-            .value = &self.raw.lamports,
-            .state = borrow_state_ptr,
-            .borrow_shift = LAMPORTS_BORROW_SHIFT,
-        };
-    }
-
-    /// Borrow lamports mutably
-    pub fn tryBorrowMutLamports(self: AccountInfo) errors.ProgramError!RefMut(*u64) {
-        try self.canBorrowMutLamports();
-
-        const borrow_state_ptr = @as(*u8, @ptrCast(&self.raw.borrow_state));
-        // Set mutable borrow bit to 0
-        borrow_state_ptr.* &= 0b01111111;
-
-        return RefMut(*u64){
-            .value = &self.raw.lamports,
-            .state = borrow_state_ptr,
-            .borrow_bitmask = LAMPORTS_MUTABLE_BORROW_BITMASK,
-        };
     }
 
     /// Assign new owner (unsafe - must ensure no active references)
