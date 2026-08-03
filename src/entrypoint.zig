@@ -6,7 +6,6 @@ const errors = @import("errors.zig");
 
 const Pubkey = types.Pubkey;
 const Account = types.Account;
-const AccountInfo = types.AccountInfo;
 const NON_DUP_MARKER = types.NON_DUP_MARKER;
 const MAX_PERMITTED_DATA_INCREASE = types.MAX_PERMITTED_DATA_INCREASE;
 const BPF_ALIGN_OF_U128 = types.BPF_ALIGN_OF_U128;
@@ -38,8 +37,8 @@ inline fn alignPointer(ptr: usize) usize {
 /// Tuple of (program_id, accounts slice, instruction_data slice)
 pub fn deserialize(
     input: [*]u8,
-    accounts_buffer: []AccountInfo,
-) struct { *const Pubkey, []AccountInfo, []align(8) u8 } {
+    accounts_buffer: []*Account,
+) struct { *const Pubkey, []*Account, []align(8) u8 } {
     var ptr = input;
     const max_accounts = accounts_buffer.len;
 
@@ -62,13 +61,13 @@ pub fn deserialize(
             // Skip 8 bytes (rent epoch or duplicate marker + padding)
             ptr += @sizeOf(u64);
 
-            if (account_ptr.borrow_state != NON_DUP_MARKER) {
+            if (account_ptr.duplicate_marker != NON_DUP_MARKER) {
                 // Duplicate account - reference existing account
-                const dup_index = account_ptr.borrow_state;
+                const dup_index = account_ptr.duplicate_marker;
                 accounts_buffer[i] = accounts_buffer[dup_index];
             } else {
                 // New account
-                accounts_buffer[i] = AccountInfo{ .raw = account_ptr };
+                accounts_buffer[i] = account_ptr;
 
                 // Skip account struct + data
                 ptr += STATIC_ACCOUNT_DATA;
@@ -85,7 +84,7 @@ pub fn deserialize(
             const account_ptr = @as(*Account, @ptrCast(@alignCast(ptr)));
             ptr += @sizeOf(u64);
 
-            if (account_ptr.borrow_state == NON_DUP_MARKER) {
+            if (account_ptr.duplicate_marker == NON_DUP_MARKER) {
                 ptr += STATIC_ACCOUNT_DATA;
                 ptr += @as(usize, @intCast(account_ptr.data_len));
                 ptr = @ptrFromInt(alignPointer(@intFromPtr(ptr)));
@@ -119,7 +118,7 @@ pub fn deserialize(
 /// Entrypoint function signature
 pub const EntrypointFn = *const fn (
     program_id: *const Pubkey,
-    accounts: []AccountInfo,
+    accounts: []*Account,
     instruction_data: []align(8) u8,
 ) errors.ProgramError!void;
 
@@ -130,7 +129,7 @@ pub fn entrypoint(
 ) fn ([*]u8) callconv(.c) u64 {
     return struct {
         fn entry(input: [*]u8) callconv(.c) u64 {
-            var accounts_buffer: [max_accounts]AccountInfo = undefined;
+            var accounts_buffer: [max_accounts]*Account = undefined;
 
             const program_id, const accounts, const instruction_data =
                 deserialize(input, &accounts_buffer);

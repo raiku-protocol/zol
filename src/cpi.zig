@@ -6,7 +6,7 @@ const errors = @import("errors.zig");
 const syscalls = @import("syscalls.zig");
 
 const Pubkey = types.Pubkey;
-const AccountInfo = types.AccountInfo;
+const Account = types.Account;
 
 /// Account metadata for instructions
 /// NOTE: Field order must match C ABI (SolAccountMeta in sol/cpi.h)
@@ -60,7 +60,7 @@ const SolSignerSeedsC = extern struct {
 /// C-ABI account info format (SolAccountInfo in sol/entrypoint.h)
 const SolAccountInfo = extern struct {
     key: *const Pubkey,
-    lamports: *u64,
+    lamports: *const u64,
     data_len: u64,
     data: [*]u8,
     owner: *const Pubkey,
@@ -80,7 +80,7 @@ const SolAccountInfo = extern struct {
 /// Returns error if the invocation fails
 pub fn invoke(
     instruction: *const Instruction,
-    accounts: []const AccountInfo,
+    accounts: []*Account,
 ) errors.ProgramError!void {
     return invokeSigned(instruction, accounts, &[_][]const u8{});
 }
@@ -96,7 +96,7 @@ pub fn invoke(
 /// Returns error if the invocation fails
 pub fn invokeSigned(
     instruction: *const Instruction,
-    accounts: []const AccountInfo,
+    accounts: []*Account,
     signers_seeds: []const []const u8,
 ) errors.ProgramError!void {
     // Convert instruction to C ABI format
@@ -118,17 +118,16 @@ pub fn invokeSigned(
 
     // Convert AccountInfo to SolAccountInfo format
     // Memory layout: [Account struct][account data immediately after]
-    for (accounts, 0..) |account_info, i| {
-        const account = account_info.raw;
-
+    for (accounts, 0..) |account, i| {
         // Data follows immediately after Account struct
-        const data_ptr: [*]u8 = @ptrFromInt(@intFromPtr(account) + @sizeOf(types.Account));
+
+        syscalls.log("raul A");
 
         sol_account_infos[i] = SolAccountInfo{
             .key = &account.key,
             .lamports = &account.lamports,
             .data_len = account.data_len,
-            .data = data_ptr,
+            .data = account.data().ptr,
             .owner = &account.owner,
             .rent_epoch = 0, // Not used in CPI
             .is_signer = account.is_signer != 0,
