@@ -6,7 +6,6 @@ const errors = @import("errors.zig");
 const syscalls = @import("syscalls.zig");
 
 const Pubkey = types.Pubkey;
-const PUBKEY_BYTES = types.PUBKEY_BYTES;
 
 /// Maximum number of seeds for PDA derivation
 pub const MAX_SEEDS: usize = 16;

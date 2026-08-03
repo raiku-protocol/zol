@@ -39,7 +39,7 @@ inline fn alignPointer(ptr: usize) usize {
 pub fn deserialize(
     input: [*]u8,
     accounts_buffer: []AccountInfo,
-) struct { *const Pubkey, []AccountInfo, []const u8 } {
+) struct { *const Pubkey, []AccountInfo, []align(8) u8 } {
     var ptr = input;
     const max_accounts = accounts_buffer.len;
 
@@ -105,10 +105,14 @@ pub fn deserialize(
     // Get program ID
     const program_id = @as(*const Pubkey, @ptrCast(@alignCast(ptr)));
 
+    // if (@alignOf(instruction_data.ptr) != 8) {
+    //     @panic("invalid alignment");
+    // }
+
     return .{
         program_id,
         accounts_buffer[0..accounts_count],
-        instruction_data,
+        @alignCast(instruction_data),
     };
 }
 
@@ -116,7 +120,7 @@ pub fn deserialize(
 pub const EntrypointFn = *const fn (
     program_id: *const Pubkey,
     accounts: []AccountInfo,
-    instruction_data: []const u8,
+    instruction_data: []align(8) u8,
 ) errors.ProgramResult;
 
 /// Create a program entrypoint with custom max accounts
@@ -131,7 +135,7 @@ pub fn entrypoint(
             const program_id, const accounts, const instruction_data =
                 deserialize(input, &accounts_buffer);
 
-            process_instruction(program_id, accounts, instruction_data) catch |err| {
+            process_instruction(program_id, accounts, @alignCast(instruction_data)) catch |err| {
                 return errors.errorToU64(err);
             };
 

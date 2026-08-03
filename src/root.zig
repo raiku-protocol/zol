@@ -1,5 +1,6 @@
 // Re-export all modules
 pub const errors = @import("errors.zig");
+pub const allocator = @import("allocator.zig");
 pub const types = @import("types.zig");
 pub const syscalls = @import("syscalls.zig");
 pub const log = @import("log.zig");
@@ -20,7 +21,6 @@ pub const BorrowState = types.BorrowState;
 pub const Ref = types.Ref;
 pub const RefMut = types.RefMut;
 
-pub const PUBKEY_BYTES = types.PUBKEY_BYTES;
 pub const MAX_TX_ACCOUNTS = types.MAX_TX_ACCOUNTS;
 pub const NON_DUP_MARKER = types.NON_DUP_MARKER;
 pub const MAX_PERMITTED_DATA_INCREASE = types.MAX_PERMITTED_DATA_INCREASE;

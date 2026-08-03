@@ -3,11 +3,8 @@
 const std = @import("std");
 const errors = @import("errors.zig");
 
-/// Number of bytes in a pubkey
-pub const PUBKEY_BYTES: usize = 32;
-
 /// Public key type
-pub const Pubkey = [PUBKEY_BYTES]u8;
+pub const Pubkey = [32]u8;
 
 /// Maximum number of accounts in a transaction
 pub const MAX_TX_ACCOUNTS: usize = 254; // u8::MAX - 1
@@ -27,9 +24,9 @@ pub fn pubkeyEq(p1: *const Pubkey, p2: *const Pubkey) bool {
     const p2_ptr = @as([*]const u64, @ptrCast(@alignCast(p2)));
 
     return p1_ptr[0] == p2_ptr[0] and
-           p1_ptr[1] == p2_ptr[1] and
-           p1_ptr[2] == p2_ptr[2] and
-           p1_ptr[3] == p2_ptr[3];
+        p1_ptr[1] == p2_ptr[1] and
+        p1_ptr[2] == p2_ptr[2] and
+        p1_ptr[3] == p2_ptr[3];
 }
 
 /// Raw account data structure (matches Solana's memory layout)

@@ -2,7 +2,7 @@
 
 /// Program execution errors
 pub const ProgramError = error{
-    AccountBorrowFailed = 1,
+    AccountBorrowFailed,
     InvalidAccountData,
     InvalidArgument,
     InvalidInstructionData,
