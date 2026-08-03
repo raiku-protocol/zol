@@ -5,8 +5,10 @@ pub fn build(b: *std.Build) !void {
 }
 
 /// Takes care of setting up everything needed to create a solana v3
-/// compatible {name}.so from provided source root
-pub fn build_so(b: *std.Build, name: []const u8, root: []const u8) void {
+/// compatible .so from provided module
+pub fn build_so(mod: *std.Build.Module) std.Build.LazyPath {
+    const b = mod.owner;
+
     const zig_exe = b.graph.zig_exe;
     const zol_b = b.dependencyFromBuildZig(@This(), .{})
         .builder;
@@ -16,14 +18,25 @@ pub fn build_so(b: *std.Build, name: []const u8, root: []const u8) void {
     const run_build_lib = b.addSystemCommand(&.{ zig_exe, "build-lib" });
     run_build_lib.setCwd(workdir.getDirectory());
     run_build_lib.addArgs(&.{ "-target", "bpfel-freestanding" });
-    run_build_lib.addArgs(&.{"-mcpu=v2"});
+    run_build_lib.addArg("-mcpu=v2");
     run_build_lib.addArgs(&.{ "-O", "ReleaseSmall" });
-    const bc_file = run_build_lib.addPrefixedOutputFileArg("-femit-llvm-bc=", b.fmt("{s}.bc", .{name}));
-    run_build_lib.addArgs(&.{"-fno-emit-bin"});
+    const bc_file = run_build_lib.addPrefixedOutputFileArg("-femit-llvm-bc=", "mod.bc");
+    run_build_lib.addArg("-fno-emit-bin");
 
-    run_build_lib.addArgs(&.{ "--dep", "zol" });
-    run_build_lib.addPrefixedFileArg("-Mroot=", b.path(root));
-    run_build_lib.addPrefixedFileArg("-Mzol=", zol_b.path("src/root.zig"));
+    for (mod.import_table.keys()) |key| {
+        run_build_lib.addArgs(&.{ "--dep", key });
+    }
+
+    run_build_lib.addPrefixedFileArg("-Mroot=", mod.root_source_file.?);
+
+    for (mod.import_table.keys()) |key| {
+        if (mod.import_table.get(key)) |val| {
+            run_build_lib.addPrefixedFileArg(
+                b.fmt("-M{s}=", .{key}),
+                val.root_source_file.?,
+            );
+        }
+    }
 
     const run_cc = b.addSystemCommand(&.{ zig_exe, "cc" });
     run_cc.setCwd(workdir.getDirectory());
@@ -35,21 +48,18 @@ pub fn build_so(b: *std.Build, name: []const u8, root: []const u8) void {
     run_cc.addArgs(&.{"-c"});
     run_cc.addFileArg(bc_file);
     run_cc.addArgs(&.{"-o"});
-    const o_file = run_cc.addOutputFileArg(b.fmt("{s}.o", .{name}));
+    const o_file = run_cc.addOutputFileArg("mod.o");
 
     const linker = zol_b
         .dependency("elf2sbpf", .{})
         .artifact("elf2sbpf");
 
     const run_linker = b.addRunArtifact(linker);
-    const so_path = b.fmt("{s}.so", .{name});
+    const so_path = "mod.so";
 
     run_linker.setCwd(workdir.getDirectory());
     run_linker.addArg("--v3");
     _ = run_linker.addFileArg(o_file);
 
-    const so_file = run_linker.addOutputFileArg(so_path);
-
-    const ins = b.addInstallFile(so_file, so_path);
-    b.getInstallStep().dependOn(&ins.step);
+    return run_linker.addOutputFileArg(so_path);
 }
