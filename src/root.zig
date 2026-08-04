@@ -9,7 +9,7 @@ pub const cpi = @import("cpi.zig");
 pub const debug = @import("debug.zig");
 
 // Re-export commonly used types
-pub const ProgramError = errors.ProgramError;
+pub const BuiltinError = errors.Builtin;
 pub const SUCCESS = errors.SUCCESS;
 
 pub const Pubkey = types.Pubkey;
@@ -21,7 +21,8 @@ pub const MAX_PERMITTED_DATA_INCREASE = types.MAX_PERMITTED_DATA_INCREASE;
 
 // Re-export utility functions
 pub const pubkeyEq = types.pubkeyEq;
-pub const deserialize = entrypoint.deserialize;
+pub const parseArgs = entrypoint.parseArgs;
+pub const Args = entrypoint.Args;
 
 // Re-export logging
 pub const logPubkey = log.logPubkey;

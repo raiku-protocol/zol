@@ -6,6 +6,7 @@ const errors = @import("errors.zig");
 
 const Pubkey = types.Pubkey;
 const Account = types.Account;
+const BuiltinError = errors.Builtin;
 const NON_DUP_MARKER = types.NON_DUP_MARKER;
 const MAX_PERMITTED_DATA_INCREASE = types.MAX_PERMITTED_DATA_INCREASE;
 const BPF_ALIGN_OF_U128 = types.BPF_ALIGN_OF_U128;
@@ -24,21 +25,16 @@ inline fn alignPointer(ptr: usize) usize {
     return (ptr + (BPF_ALIGN_OF_U128 - 1)) & ~(BPF_ALIGN_OF_U128 - 1);
 }
 
-/// Deserialize the input buffer into program_id, accounts, and instruction_data
-///
-/// This function performs zero-copy deserialization of the Solana input buffer.
-/// All returned values are pointers/slices into the original input buffer.
-///
-/// # Arguments
-/// * `input` - Raw pointer to the input buffer from Solana runtime
-/// * `accounts_buffer` - Pre-allocated buffer to store AccountInfo structs
-///
-/// # Returns
-/// Tuple of (program_id, accounts slice, instruction_data slice)
-pub fn deserialize(
+pub const Args = struct {
+    program_id: *const Pubkey,
+    accounts: []*Account,
+    data: []align(8) u8,
+};
+
+pub fn parseArgs(
     input: [*]u8,
     accounts_buffer: []*Account,
-) struct { *const Pubkey, []*Account, []align(8) u8 } {
+) Args {
     var ptr = input;
     const max_accounts = accounts_buffer.len;
 
@@ -104,41 +100,9 @@ pub fn deserialize(
     // Get program ID
     const program_id = @as(*const Pubkey, @ptrCast(@alignCast(ptr)));
 
-    // if (@alignOf(instruction_data.ptr) != 8) {
-    //     @panic("invalid alignment");
-    // }
-
     return .{
-        program_id,
-        accounts_buffer[0..accounts_count],
-        @alignCast(instruction_data),
+        .program_id = program_id,
+        .accounts = accounts_buffer[0..accounts_count],
+        .data = @alignCast(instruction_data),
     };
-}
-
-/// Entrypoint function signature
-pub const EntrypointFn = *const fn (
-    program_id: *const Pubkey,
-    accounts: []*Account,
-    instruction_data: []align(8) u8,
-) errors.ProgramError!void;
-
-/// Create a program entrypoint with custom max accounts
-pub fn entrypoint(
-    comptime max_accounts: usize,
-    comptime process_instruction: EntrypointFn,
-) fn ([*]u8) callconv(.c) u64 {
-    return struct {
-        fn entry(input: [*]u8) callconv(.c) u64 {
-            var accounts_buffer: [max_accounts]*Account = undefined;
-
-            const program_id, const accounts, const instruction_data =
-                deserialize(input, &accounts_buffer);
-
-            process_instruction(program_id, accounts, @alignCast(instruction_data)) catch |err| {
-                return errors.errorToU64(err);
-            };
-
-            return errors.SUCCESS;
-        }
-    }.entry;
 }

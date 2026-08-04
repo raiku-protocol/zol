@@ -6,6 +6,7 @@ const errors = @import("errors.zig");
 const syscalls = @import("syscalls.zig");
 
 const Pubkey = types.Pubkey;
+const BuiltinError = errors.Builtin;
 
 /// Maximum number of seeds for PDA derivation
 pub const MAX_SEEDS: usize = 16;
@@ -40,7 +41,7 @@ pub fn findProgramAddress(
     program_id: *const Pubkey,
     out_address: *Pubkey,
     out_bump: *u8,
-) errors.ProgramError!void {
+) BuiltinError!void {
     out_bump.* = 255;
 
     // Convert seeds to C ABI format
@@ -88,7 +89,7 @@ pub fn findProgramAddress(
 pub fn createProgramAddress(
     seeds: []const []const u8,
     program_id: *const Pubkey,
-) errors.ProgramError!Pubkey {
+) BuiltinError!Pubkey {
     // Validate seeds
     if (seeds.len > MAX_SEEDS) {
         return error.MaxSeedLengthExceeded;
@@ -127,7 +128,7 @@ pub fn createWithSeed(
     base: *const Pubkey,
     seed: []const u8,
     program_id: *const Pubkey,
-) errors.ProgramError!Pubkey {
+) BuiltinError!Pubkey {
     if (seed.len > MAX_SEED_LEN) {
         return error.MaxSeedLengthExceeded;
     }

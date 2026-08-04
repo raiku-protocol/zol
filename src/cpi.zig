@@ -7,6 +7,7 @@ const syscalls = @import("syscalls.zig");
 
 const Pubkey = types.Pubkey;
 const Account = types.Account;
+const BuiltinError = errors.Builtin;
 
 /// Account metadata for instructions
 /// NOTE: Field order must match C ABI (SolAccountMeta in sol/cpi.h)
@@ -98,7 +99,7 @@ pub fn invokeSigned(
     instruction: *const Instruction,
     accounts: []*Account,
     signers_seeds: []const []const u8,
-) errors.ProgramError!void {
+) BuiltinError!void {
     // Convert instruction to C ABI format
     const sol_instruction = SolInstruction{
         .program_id = instruction.program_id,
@@ -108,10 +109,7 @@ pub fn invokeSigned(
         .data_len = instruction.data.len,
     };
 
-    // Convert AccountInfo array to SolAccountInfo C ABI format
-    // The syscall expects SolAccountInfo, not our AccountInfo wrapper
-    // Using small array to avoid sBPF stack overflow (4KB limit)
-    var sol_account_infos: [4]SolAccountInfo = undefined;
+    var sol_account_infos: [32]SolAccountInfo = undefined;
     if (accounts.len > sol_account_infos.len) {
         return error.InvalidArgument;
     }
@@ -120,9 +118,6 @@ pub fn invokeSigned(
     // Memory layout: [Account struct][account data immediately after]
     for (accounts, 0..) |account, i| {
         // Data follows immediately after Account struct
-
-        syscalls.log("raul A");
-
         sol_account_infos[i] = SolAccountInfo{
             .key = &account.key,
             .lamports = &account.lamports,
