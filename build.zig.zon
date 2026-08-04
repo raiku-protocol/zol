@@ -8,6 +8,10 @@
             .url = "git+https://github.com/DaviRain-Su/elf2sbpf#6235b52519cc08f91a16ec3f2e87a90cf3ad3297",
             .hash = "elf2sbpf-0.5.0-1__aoRseDwAWfbCWlgAesIgky1L2SpNZCN1O3ZADegLS",
         },
+        .base58 = .{
+            .url = "git+https://github.com/Gealber/zig-base58.git#f248a491e7b8d09821b874509bfdebc3795a1284",
+            .hash = "base58-0.0.0-N---Gj2KAAA4q8yIkwpY12iD9eyd5H75FbwrekcrHPi4",
+        },
     },
     .paths = .{
         "build.zig",

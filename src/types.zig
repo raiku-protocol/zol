@@ -1,10 +1,28 @@
 //! Core Solana types
-
 const std = @import("std");
+const base58 = @import("base58");
+
 const ProgramError = @import("errors.zig").ProgramError;
 
 /// Public key type
-pub const Pubkey = [32]u8;
+pub const Pubkey = extern struct {
+    bytes: [32]u8 align(8),
+
+    pub fn eq(a: *const @This(), b: *const @This()) bool {
+        return std.mem.eql(u8, &a.bytes, &b.bytes);
+    }
+
+    pub fn b58(comptime str: []const u8) @This() {
+        return parse(str) catch @compileError("Invalid encoding");
+    }
+
+    pub fn parse(bytes: []const u8) !@This() {
+        var buf: [32]u8 = undefined;
+        const slice = try base58.decode(&buf, bytes);
+        if (slice.len != buf.len) return error.InvalidPubkey;
+        return .{ .bytes = buf };
+    }
+};
 
 /// Maximum number of accounts in a transaction
 pub const MAX_TX_ACCOUNTS: usize = 254; // u8::MAX - 1
@@ -17,17 +35,6 @@ pub const MAX_PERMITTED_DATA_INCREASE: usize = 10 * 1024;
 
 /// BPF alignment for u128
 pub const BPF_ALIGN_OF_U128: usize = 8;
-
-/// Compare two pubkeys for equality (optimized)
-pub fn pubkeyEq(p1: *const Pubkey, p2: *const Pubkey) bool {
-    const p1_ptr = @as([*]const u64, @ptrCast(@alignCast(p1)));
-    const p2_ptr = @as([*]const u64, @ptrCast(@alignCast(p2)));
-
-    return p1_ptr[0] == p2_ptr[0] and
-        p1_ptr[1] == p2_ptr[1] and
-        p1_ptr[2] == p2_ptr[2] and
-        p1_ptr[3] == p2_ptr[3];
-}
 
 /// Raw account data structure (matches Solana's memory layout)
 pub const Account = extern struct {

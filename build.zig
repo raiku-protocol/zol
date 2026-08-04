@@ -1,7 +1,13 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) !void {
-    _ = b.addModule("zol", .{ .root_source_file = b.path("src/root.zig") });
+    _ = b.addModule("zol", .{
+        .root_source_file = b.path("src/root.zig"),
+        .imports = &.{.{
+            .name = "base58",
+            .module = b.dependency("base58", .{}).module("base58"),
+        }},
+    });
 }
 
 /// Takes care of setting up everything needed to create a solana v3
@@ -19,7 +25,7 @@ pub fn build_so(mod: *std.Build.Module) std.Build.LazyPath {
     run_build_lib.setCwd(workdir.getDirectory());
     run_build_lib.addArgs(&.{ "-target", "bpfel-freestanding" });
     run_build_lib.addArg("-mcpu=v2");
-    run_build_lib.addArgs(&.{ "-O", "ReleaseSmall" });
+    run_build_lib.addArgs(&.{ "-O", "ReleaseFast" });
     const bc_file = run_build_lib.addPrefixedOutputFileArg("-femit-llvm-bc=", "mod.bc");
     run_build_lib.addArg("-fno-emit-bin");
 
@@ -31,10 +37,25 @@ pub fn build_so(mod: *std.Build.Module) std.Build.LazyPath {
 
     for (mod.import_table.keys()) |key| {
         if (mod.import_table.get(key)) |val| {
+            if (std.mem.eql(u8, key, "zol")) {
+                for (zol_b.available_deps) |d| {
+                    run_build_lib.addArgs(&.{ "--dep", d[0] });
+                }
+            }
+
             run_build_lib.addPrefixedFileArg(
                 b.fmt("-M{s}=", .{key}),
                 val.root_source_file.?,
             );
+
+            if (std.mem.eql(u8, key, "zol")) {
+                for (zol_b.available_deps) |d| {
+                    run_build_lib.addPrefixedFileArg(
+                        b.fmt("-M{s}=", .{d[0]}),
+                        zol_b.dependency(d[0], .{}).module(d[0]).root_source_file.?,
+                    );
+                }
+            }
         }
     }
 
