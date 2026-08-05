@@ -31,38 +31,24 @@ pub const MAX_TX_ACCOUNTS: usize = 254; // u8::MAX - 1
 pub const NON_DUP_MARKER: u8 = 0xFF;
 
 /// Maximum permitted data increase per instruction
-pub const MAX_PERMITTED_DATA_INCREASE: usize = 10 * 1024;
+pub const PADDING: usize = 10 * 1024;
 
 /// BPF alignment for u128
 pub const BPF_ALIGN_OF_U128: usize = 8;
 
+pub const MAX_PERMITTED_DATA_INCREASE: usize = 10 * 1024;
+
 /// Raw account data structure (matches Solana's memory layout)
 pub const Account = extern struct {
-    /// 0xFF = unique, index = duplicate of that account
     duplicate_marker: u8,
-
-    /// Indicates whether the transaction was signed by this account
     is_signer: u8,
-
-    /// Indicates whether the account is writable
     is_writable: u8,
-
-    /// Indicates whether this account represents a program
     executable: u8,
+    padding: [4]u8,
 
-    /// Difference between original and current data length
-    resize_delta: i32,
-
-    /// Public key of the account
     key: Pubkey,
-
-    /// Program that owns this account
     owner: Pubkey,
-
-    /// The lamports in the account
     lamports: u64,
-
-    /// Length of the data
     data_len: u64,
 
     // Account data follows immediately in memory after this struct
@@ -70,5 +56,12 @@ pub const Account = extern struct {
         const memory_address = @intFromPtr(self) + @sizeOf(@This());
         const ptr: [*]u8 = @ptrFromInt(memory_address);
         return ptr[0..self.data_len];
+    }
+
+    pub fn serialized_size(self: *const @This()) usize {
+        const body_data_grow = @sizeOf(Account) + self.data_len + PADDING;
+        const alignment = body_data_grow % 8;
+        const rent_epoch_unused = 8;
+        return body_data_grow + alignment + rent_epoch_unused;
     }
 };

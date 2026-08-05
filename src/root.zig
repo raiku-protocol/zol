@@ -1,42 +1,33 @@
-// Re-export all modules
-pub const errors = @import("errors.zig");
-pub const types = @import("types.zig");
-pub const syscalls = @import("syscalls.zig");
-pub const log = @import("log.zig");
-pub const entrypoint = @import("entrypoint.zig");
-pub const pda = @import("pda.zig");
-pub const cpi = @import("cpi.zig");
-pub const debug = @import("debug.zig");
+const errors = @import("errors.zig");
+const types = @import("types.zig");
+const syscalls = @import("syscalls.zig");
 
-// Re-export commonly used types
+const log = @import("log.zig");
+const entrypoint = @import("entrypoint.zig");
+const pda = @import("pda.zig");
+const cpi = @import("cpi.zig");
+const debug = @import("debug.zig");
+
 pub const BuiltinError = errors.Builtin;
-pub const SUCCESS = errors.SUCCESS;
+pub const errorToU64 = errors.errorToU64;
 
 pub const Pubkey = types.Pubkey;
 pub const Account = types.Account;
 
-pub const MAX_TX_ACCOUNTS = types.MAX_TX_ACCOUNTS;
-pub const NON_DUP_MARKER = types.NON_DUP_MARKER;
-pub const MAX_PERMITTED_DATA_INCREASE = types.MAX_PERMITTED_DATA_INCREASE;
-
-// Re-export utility functions
 pub const pubkeyEq = types.pubkeyEq;
 pub const parseArgs = entrypoint.parseArgs;
 pub const Args = entrypoint.Args;
 
-// Re-export logging
 pub const logPubkey = log.logPubkey;
+pub const logMsg = log.log;
+pub const logU64 = log.logU64;
 pub const logComputeUnits = log.logComputeUnits;
 pub const getRemainingComputeUnits = log.getRemainingComputeUnits;
 
-// Re-export PDA functions
 pub const findProgramAddress = pda.findProgramAddress;
 pub const createProgramAddress = pda.createProgramAddress;
 pub const createWithSeed = pda.createWithSeed;
-pub const MAX_SEEDS = pda.MAX_SEEDS;
-pub const MAX_SEED_LEN = pda.MAX_SEED_LEN;
 
-// Re-export CPI
 pub const AccountMeta = cpi.AccountMeta;
 pub const Instruction = cpi.Instruction;
 pub const invoke = cpi.invoke;
@@ -44,17 +35,8 @@ pub const invokeSigned = cpi.invokeSigned;
 pub const setReturnData = cpi.setReturnData;
 pub const getReturnData = cpi.getReturnData;
 
-/// Create a program entrypoint with default max accounts (254)
-pub fn createEntrypoint(
-    comptime process_instruction: entrypoint.EntrypointFn,
-) fn ([*]u8) callconv(.c) u64 {
-    return entrypoint.entrypoint(MAX_TX_ACCOUNTS, process_instruction);
-}
-
-/// Create a program entrypoint with custom max accounts
-pub fn createEntrypointWithMaxAccounts(
-    comptime max_accounts: usize,
-    comptime process_instruction: entrypoint.EntrypointFn,
-) fn ([*]u8) callconv(.c) u64 {
-    return entrypoint.entrypoint(max_accounts, process_instruction);
-}
+pub const MAX_SEEDS = pda.MAX_SEEDS;
+pub const MAX_SEED_LEN = pda.MAX_SEED_LEN;
+pub const MAX_TX_ACCOUNTS = types.MAX_TX_ACCOUNTS;
+pub const NON_DUP_MARKER = types.NON_DUP_MARKER;
+pub const MAX_PERMITTED_DATA_INCREASE = types.MAX_PERMITTED_DATA_INCREASE;
