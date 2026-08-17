@@ -1,13 +1,20 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) !void {
-    _ = b.addModule("zol", .{
+    const root_mod = b.addModule("zol", .{
         .root_source_file = b.path("src/root.zig"),
         .imports = &.{.{
             .name = "base58",
             .module = b.dependency("base58", .{}).module("base58"),
         }},
+        .target = b.graph.host,
     });
+
+    const unit_tests = b.addTest(.{ .root_module = root_mod });
+    const run_unit_tests = b.addRunArtifact(unit_tests);
+
+    const test_step = b.step("test", "run tests");
+    test_step.dependOn(&run_unit_tests.step);
 }
 
 /// Takes care of setting up everything needed to create a solana v3

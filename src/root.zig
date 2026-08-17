@@ -6,7 +6,7 @@ const log = @import("log.zig");
 const entrypoint = @import("entrypoint.zig");
 const pda = @import("pda.zig");
 const cpi = @import("cpi.zig");
-const debug = @import("debug.zig");
+pub const debug = @import("debug.zig").debug;
 
 pub const BuiltinError = errors.Builtin;
 pub const errorToU64 = errors.errorToU64;
@@ -40,3 +40,7 @@ pub const MAX_SEED_LEN = pda.MAX_SEED_LEN;
 pub const MAX_TX_ACCOUNTS = types.MAX_TX_ACCOUNTS;
 pub const NON_DUP_MARKER = types.NON_DUP_MARKER;
 pub const MAX_PERMITTED_DATA_INCREASE = types.MAX_PERMITTED_DATA_INCREASE;
+
+test {
+    _ = debug;
+}
