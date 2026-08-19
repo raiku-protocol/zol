@@ -1,15 +1,14 @@
 const std = @import("std");
 const syscalls = @import("syscalls.zig");
 
-const DEBUG_BUFFER: *[128]u8 = @ptrFromInt(0x300000000);
-
 const BufWrite = struct {
     offset: usize = 0,
+    buffer: [64]u8 = undefined,
 
     const Self = @This();
 
     fn write(self: *Self, bytes: []const u8) void {
-        std.mem.copyForwards(u8, DEBUG_BUFFER[self.offset..], bytes);
+        std.mem.copyForwards(u8, self.buffer[self.offset..], bytes);
         self.offset += bytes.len;
     }
 
@@ -27,7 +26,7 @@ const BufWrite = struct {
     }
 
     fn writeNibble(self: *Self, nibble: u8) void {
-        const chr = &DEBUG_BUFFER[self.offset];
+        const chr = &self.buffer[self.offset];
         if (nibble < 10) chr.* = nibble + "0"[0] else chr.* = nibble - 10 + "a"[0];
         self.offset += 1;
     }
@@ -48,13 +47,16 @@ const BufWrite = struct {
     }
 
     fn logAndReset(self: *Self) void {
-        syscalls.log(DEBUG_BUFFER[0..self.offset]);
+        syscalls.log(self.buffer[0..self.offset]);
         self.offset = 0;
     }
 };
 
 pub fn debug(data: []const u8) void {
     var bw: BufWrite = .{};
+
+    bw.write("debug:");
+    bw.logAndReset();
 
     const start = @intFromPtr(data.ptr);
 
@@ -71,42 +73,53 @@ pub fn debug(data: []const u8) void {
     const addr = start - skip;
     const rows = (data.len + skip - 1) / 8 + 1;
 
-    for (0..rows) |_| {
-        bw.write("|");
-        bw.writeAddr(addr + offset);
-        bw.write("| ");
+    var zeroes: usize = 0;
 
+    for (0..rows) |_| {
         var row_offset: usize = 0;
 
-        for (0..skip) |_| {
-            bw.write("░░ ");
-        }
-        for (0..8 - skip) |_| {
-            if (offset + row_offset < data.len) {
-                bw.writeHex(data[offset + row_offset]);
-                bw.write(" ");
-                row_offset += 1;
-            } else {
-                bw.write("   ");
+        if (skip == 0 and std.mem.eql(u8, data[offset .. offset + 8], &std.mem.zeroes([8]u8))) {
+            zeroes += 8;
+            offset += 8;
+        } else {
+            if (zeroes > 0) {
+                bw.write(" --");
+                bw.logAndReset();
+                zeroes = 0;
             }
-        }
-        // ascii
-        bw.write("| ");
-        row_offset = 0;
-        for (0..skip) |_| {
-            bw.write("░");
-        }
-        for (0..8 - skip) |_| {
-            if (offset + row_offset < data.len) {
-                bw.writeAscii(data[offset + row_offset]);
-                row_offset += 1;
-            } else {
-                bw.write(" ");
+            bw.writeAddr(addr + offset);
+            bw.write("| ");
+
+            for (0..skip) |_| {
+                bw.write("░░ ");
             }
+            for (0..8 - skip) |_| {
+                if (offset + row_offset < data.len) {
+                    bw.writeHex(data[offset + row_offset]);
+                    bw.write(" ");
+                    row_offset += 1;
+                } else {
+                    bw.write("   ");
+                }
+            }
+            // ascii
+            bw.write("|");
+            row_offset = 0;
+            for (0..skip) |_| {
+                bw.write("░");
+            }
+            for (0..8 - skip) |_| {
+                if (offset + row_offset < data.len) {
+                    bw.writeAscii(data[offset + row_offset]);
+                    row_offset += 1;
+                } else {
+                    bw.write(" ");
+                }
+            }
+            offset += 8 - skip;
+            skip = 0;
+            bw.write("|");
+            bw.logAndReset();
         }
-        offset += 8 - skip;
-        skip = 0;
-        bw.write("|");
-        bw.logAndReset();
     }
 }
