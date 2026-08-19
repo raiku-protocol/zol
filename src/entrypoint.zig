@@ -1,108 +1,100 @@
 //! Solana program entrypoint and input deserialization
 
 const std = @import("std");
+const syscalls = @import("syscalls.zig");
+const constants = @import("constants.zig");
 const types = @import("types.zig");
+const abi = @import("abi.zig");
 const errors = @import("errors.zig");
+const log = @import("log.zig");
+const zol = @import("root.zig");
 
 const Pubkey = types.Pubkey;
 const Account = types.Account;
 const BuiltinError = errors.Builtin;
-const NON_DUP_MARKER = types.NON_DUP_MARKER;
-const MAX_PERMITTED_DATA_INCREASE = types.MAX_PERMITTED_DATA_INCREASE;
-const BPF_ALIGN_OF_U128 = types.BPF_ALIGN_OF_U128;
-
-/// Heap start address for BPF programs
-pub const HEAP_START_ADDRESS: u64 = 0x300000000;
-
-/// Heap length (32KB)
-pub const HEAP_LENGTH: usize = 32 * 1024;
-
-/// Static account data size (account header + max data increase)
-const STATIC_ACCOUNT_DATA: usize = @sizeOf(Account) + MAX_PERMITTED_DATA_INCREASE;
-
-/// Align pointer to BPF u128 alignment
-inline fn alignPointer(ptr: usize) usize {
-    return (ptr + (BPF_ALIGN_OF_U128 - 1)) & ~(BPF_ALIGN_OF_U128 - 1);
-}
 
 pub const Args = struct {
-    program_id: *const Pubkey,
-    accounts: []*Account,
-    data: []align(8) u8,
+    program_id: Pubkey,
+    accounts: []Account,
+    data: []const u8,
+};
+
+pub const Parser = struct {
+    input: [*]u8,
+
+    const Self = @This();
+
+    fn readU64(self: *Self) u64 {
+        const u = std.mem.bytesToValue(u64, self.input[0..8]);
+        self.input = self.input[8..];
+        return u;
+    }
+
+    fn readSlice(self: *Self, len: usize) []const u8 {
+        const slice = self.input[0..len];
+        self.input = self.input[len..];
+        return slice;
+    }
+
+    fn peek(self: *Self) u8 {
+        return self.input[0];
+    }
+
+    fn advanceWord(self: *Self) void {
+        self.input = self.input[8..];
+    }
+
+    fn readAccount(self: *Self) Account {
+        const acc: *abi.Account = @ptrCast(@alignCast(self.input));
+        self.input = self.input[@sizeOf(abi.Account)..];
+
+        const buffer_len = acc.data_len + constants.growth_buffer_size;
+        const buffer = self.input[0..buffer_len];
+
+        // we want to align _AND_ skip 8 bytes (rent epoch)
+        const seven: usize = 7;
+        const aligned: usize = (buffer_len + 7) & ~seven;
+        const skip_epoch = aligned + 8;
+
+        self.input = self.input[skip_epoch..];
+
+        return .{ .inner = acc, .buffer = buffer };
+    }
+
+    fn readPubkey(self: *Self) Pubkey {
+        var bytes: [32]u8 = undefined;
+        std.mem.copyForwards(u8, &bytes, self.readSlice(32));
+        return .{
+            .bytes = bytes,
+        };
+    }
 };
 
 pub fn parseArgs(
-    input: [*]u8,
-    accounts_buffer: []*Account,
+    input: [*]align(8) u8,
+    accounts: []Account,
 ) Args {
-    var ptr = input;
-    const max_accounts = accounts_buffer.len;
+    var parser: Parser = .{ .input = input };
 
-    // Read number of accounts
-    const num_accounts_ptr = @as(*const u64, @ptrCast(@alignCast(ptr)));
-    const num_accounts: usize = @intCast(num_accounts_ptr.*);
-    ptr += @sizeOf(u64);
+    const num_accounts = parser.readU64();
 
-    var accounts_count: usize = 0;
-
-    if (num_accounts > 0) {
-        // Limit to buffer capacity
-        const to_process = if (num_accounts > max_accounts) max_accounts else num_accounts;
-        var to_skip = num_accounts - to_process;
-
-        var i: usize = 0;
-        while (i < to_process) : (i += 1) {
-            const account_ptr = @as(*Account, @ptrCast(@alignCast(ptr)));
-
-            // Skip 8 bytes (rent epoch or duplicate marker + padding)
-            ptr += @sizeOf(u64);
-
-            if (account_ptr.duplicate_marker != NON_DUP_MARKER) {
-                // Duplicate account - reference existing account
-                const dup_index = account_ptr.duplicate_marker;
-                accounts_buffer[i] = accounts_buffer[dup_index];
-            } else {
-                // New account
-                accounts_buffer[i] = account_ptr;
-
-                // Skip account struct + data
-                ptr += STATIC_ACCOUNT_DATA;
-                ptr += @as(usize, @intCast(account_ptr.data_len));
-
-                // Align to u128
-                ptr = @ptrFromInt(alignPointer(@intFromPtr(ptr)));
-            }
-            accounts_count += 1;
-        }
-
-        // Skip remaining accounts if buffer was too small
-        while (to_skip > 0) : (to_skip -= 1) {
-            const account_ptr = @as(*Account, @ptrCast(@alignCast(ptr)));
-            ptr += @sizeOf(u64);
-
-            if (account_ptr.duplicate_marker == NON_DUP_MARKER) {
-                ptr += STATIC_ACCOUNT_DATA;
-                ptr += @as(usize, @intCast(account_ptr.data_len));
-                ptr = @ptrFromInt(alignPointer(@intFromPtr(ptr)));
-            }
+    for (0..num_accounts) |i| {
+        const peek = parser.peek();
+        if (peek == 0xff) {
+            if (i < accounts.len) accounts[i] = parser.readAccount();
+        } else {
+            if (i < accounts.len) accounts[i] = accounts[peek];
+            parser.advanceWord();
         }
     }
 
-    // Read instruction data length
-    const ix_data_len_ptr = @as(*const u64, @ptrCast(@alignCast(ptr)));
-    const ix_data_len: usize = @intCast(ix_data_len_ptr.*);
-    ptr += @sizeOf(u64);
-
-    // Get instruction data slice
-    const instruction_data = ptr[0..ix_data_len];
-    ptr += ix_data_len;
-
-    // Get program ID
-    const program_id = @as(*const Pubkey, @ptrCast(@alignCast(ptr)));
+    const instruction_data_len = parser.readU64();
+    const data = parser.readSlice(instruction_data_len);
+    const program_id = parser.readPubkey();
 
     return .{
+        .data = data,
         .program_id = program_id,
-        .accounts = accounts_buffer[0..accounts_count],
-        .data = @alignCast(instruction_data),
+        .accounts = accounts[0..@min(accounts.len, num_accounts)],
     };
 }
