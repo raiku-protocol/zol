@@ -6,3 +6,4 @@ pub const spl_token_program_id = types.Pubkey.b58("TokenkegQfeZyiNwAJbNbGKPFXCWu
 pub const spl_token_2022_program_id = types.Pubkey.b58("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
 
 pub const growth_buffer_size = 10 * 1024;
+pub const heap_start: u64 = 0x300000000;

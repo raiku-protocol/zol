@@ -27,24 +27,21 @@ pub const Pubkey = extern struct {
     }
 };
 
-pub const AccountMeta = struct {
-    inner: Account,
-    opts: MetaOptions,
-};
-
-pub const MetaOptions = struct {
+pub const Permissions = struct {
     writable: bool = false,
     signer: bool = false,
 };
 
 pub const Account = struct {
     inner: *abi.Account,
+    permissions: Permissions,
     buffer: []u8,
 
-    pub fn meta(self: Account, opts: MetaOptions) AccountMeta {
+    pub fn with_permissions(self: Account, permissions: Permissions) Account {
         return .{
-            .inner = self,
-            .opts = opts,
+            .inner = self.inner,
+            .permissions = permissions,
+            .buffer = self.buffer,
         };
     }
 

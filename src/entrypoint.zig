@@ -58,7 +58,14 @@ pub const Parser = struct {
 
         self.input = self.input[skip_epoch..];
 
-        return .{ .inner = acc, .buffer = buffer };
+        return .{
+            .inner = acc,
+            .buffer = buffer,
+            .permissions = .{
+                .signer = acc.signer != 0,
+                .writable = acc.writable != 0,
+            },
+        };
     }
 
     fn readPubkey(self: *Self) Pubkey {
