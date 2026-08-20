@@ -82,15 +82,19 @@ const Parser = struct {
         const buffer: []u8 = self.input[0..buffer_len];
 
         // we want to align _AND_ skip 8 bytes (rent epoch)
-        const seven: usize = 7;
-        const aligned: usize = (buffer_len + seven) & ~seven;
+        const aligned = Heap.alignTo(8, buffer_len);
+
         const skip = aligned + 8;
 
         self.input = self.input[skip..];
 
         return .{
             .inner = acc,
-            .buffer = buffer,
+            .backing_buffer = buffer,
+            .permissions = .{
+                .writable = acc.writable != 0,
+                .signer = acc.signer != 0,
+            },
         };
     }
 

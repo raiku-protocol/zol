@@ -12,7 +12,7 @@
 /// Parameters:
 ///   - message: [*]const u8
 ///   - len: u64
-pub const sol_log_ = @as(*align(1) const fn([*]const u8, u64) void, @ptrFromInt(0x207559bd));
+pub const sol_log_ = @as(*align(1) const fn ([*]const u8, u64) void, @ptrFromInt(0x207559bd));
 
 /// sol_log_64_
 /// Hash: 0x5c2a3178
@@ -22,24 +22,24 @@ pub const sol_log_ = @as(*align(1) const fn([*]const u8, u64) void, @ptrFromInt(
 ///   - arg3: u64
 ///   - arg4: u64
 ///   - arg5: u64
-pub const sol_log_64_ = @as(*align(1) const fn(u64, u64, u64, u64, u64) void, @ptrFromInt(0x5c2a3178));
+pub const sol_log_64_ = @as(*align(1) const fn (u64, u64, u64, u64, u64) void, @ptrFromInt(0x5c2a3178));
 
 /// sol_log_compute_units_
 /// Hash: 0x52ba5096
-pub const sol_log_compute_units_ = @as(*align(1) const fn() void, @ptrFromInt(0x52ba5096));
+pub const sol_log_compute_units_ = @as(*align(1) const fn () void, @ptrFromInt(0x52ba5096));
 
 /// sol_log_pubkey
 /// Hash: 0x7ef088ca
 /// Parameters:
 ///   - pubkey_addr: [*]const u8
-pub const sol_log_pubkey = @as(*align(1) const fn([*]const u8) void, @ptrFromInt(0x7ef088ca));
+pub const sol_log_pubkey = @as(*align(1) const fn ([*]const u8) void, @ptrFromInt(0x7ef088ca));
 
 /// sol_log_data
 /// Hash: 0x7317b434
 /// Parameters:
 ///   - data: [*]const u8
 ///   - data_len: u64
-pub const sol_log_data = @as(*align(1) const fn([*]const u8, u64) void, @ptrFromInt(0x7317b434));
+pub const sol_log_data = @as(*align(1) const fn ([*]const u8, u64) void, @ptrFromInt(0x7317b434));
 
 /// sol_sha256
 /// Hash: 0x11f49d86
@@ -48,7 +48,7 @@ pub const sol_log_data = @as(*align(1) const fn([*]const u8, u64) void, @ptrFrom
 ///   - val_len: u64
 ///   - hash_result: [*]u8
 /// Returns: u64
-pub const sol_sha256 = @as(*align(1) const fn([*]const u8, u64, [*]u8) u64, @ptrFromInt(0x11f49d86));
+pub const sol_sha256 = @as(*align(1) const fn ([*]const u8, u64, [*]u8) u64, @ptrFromInt(0x11f49d86));
 
 /// sol_keccak256
 /// Hash: 0xd7793abb
@@ -57,7 +57,7 @@ pub const sol_sha256 = @as(*align(1) const fn([*]const u8, u64, [*]u8) u64, @ptr
 ///   - val_len: u64
 ///   - hash_result: [*]u8
 /// Returns: u64
-pub const sol_keccak256 = @as(*align(1) const fn([*]const u8, u64, [*]u8) u64, @ptrFromInt(0xd7793abb));
+pub const sol_keccak256 = @as(*align(1) const fn ([*]const u8, u64, [*]u8) u64, @ptrFromInt(0xd7793abb));
 
 /// sol_blake3
 /// Hash: 0x174c5122
@@ -66,7 +66,7 @@ pub const sol_keccak256 = @as(*align(1) const fn([*]const u8, u64, [*]u8) u64, @
 ///   - val_len: u64
 ///   - hash_result: [*]u8
 /// Returns: u64
-pub const sol_blake3 = @as(*align(1) const fn([*]const u8, u64, [*]u8) u64, @ptrFromInt(0x174c5122));
+pub const sol_blake3 = @as(*align(1) const fn ([*]const u8, u64, [*]u8) u64, @ptrFromInt(0x174c5122));
 
 /// sol_memcpy_
 /// Hash: 0x717cc4a3
@@ -74,7 +74,7 @@ pub const sol_blake3 = @as(*align(1) const fn([*]const u8, u64, [*]u8) u64, @ptr
 ///   - dst: [*]u8
 ///   - src: [*]const u8
 ///   - n: u64
-pub const sol_memcpy_ = @as(*align(1) const fn([*]u8, [*]const u8, u64) void, @ptrFromInt(0x717cc4a3));
+pub const sol_memcpy_ = @as(*align(1) const fn ([*]u8, [*]const u8, u64) void, @ptrFromInt(0x717cc4a3));
 
 /// sol_memmove_
 /// Hash: 0x434371f8
@@ -82,7 +82,7 @@ pub const sol_memcpy_ = @as(*align(1) const fn([*]u8, [*]const u8, u64) void, @p
 ///   - dst: [*]u8
 ///   - src: [*]const u8
 ///   - n: u64
-pub const sol_memmove_ = @as(*align(1) const fn([*]u8, [*]const u8, u64) void, @ptrFromInt(0x434371f8));
+pub const sol_memmove_ = @as(*align(1) const fn ([*]u8, [*]const u8, u64) void, @ptrFromInt(0x434371f8));
 
 /// sol_memcmp_
 /// Hash: 0x5fdcde31
@@ -91,7 +91,7 @@ pub const sol_memmove_ = @as(*align(1) const fn([*]u8, [*]const u8, u64) void, @
 ///   - s2: [*]const u8
 ///   - n: u64
 ///   - result: [*]i32
-pub const sol_memcmp_ = @as(*align(1) const fn([*]const u8, [*]const u8, u64, [*]i32) void, @ptrFromInt(0x5fdcde31));
+pub const sol_memcmp_ = @as(*align(1) const fn ([*]const u8, [*]const u8, u64, [*]i32) void, @ptrFromInt(0x5fdcde31));
 
 /// sol_memset_
 /// Hash: 0x3770fb22
@@ -99,7 +99,7 @@ pub const sol_memcmp_ = @as(*align(1) const fn([*]const u8, [*]const u8, u64, [*
 ///   - s: [*]u8
 ///   - c: u8
 ///   - n: u64
-pub const sol_memset_ = @as(*align(1) const fn([*]u8, u8, u64) void, @ptrFromInt(0x3770fb22));
+pub const sol_memset_ = @as(*align(1) const fn ([*]u8, u8, u64) void, @ptrFromInt(0x3770fb22));
 
 /// sol_invoke_signed_c
 /// Hash: 0xa22b9c85
@@ -110,7 +110,7 @@ pub const sol_memset_ = @as(*align(1) const fn([*]u8, u8, u64) void, @ptrFromInt
 ///   - signers_seeds_addr: [*]const u8
 ///   - signers_seeds_len: u64
 /// Returns: u64
-pub const sol_invoke_signed_c = @as(*align(1) const fn([*]const u8, [*]const u8, u64, [*]const u8, u64) u64, @ptrFromInt(0xa22b9c85));
+pub const sol_invoke_signed_c = @as(*align(1) const fn ([*]const u8, [*]const u8, u64, [*]const u8, u64) u64, @ptrFromInt(0xa22b9c85));
 
 /// sol_invoke_signed_rust
 /// Hash: 0xd7449092
@@ -121,14 +121,14 @@ pub const sol_invoke_signed_c = @as(*align(1) const fn([*]const u8, [*]const u8,
 ///   - signers_seeds_addr: [*]const u8
 ///   - signers_seeds_len: u64
 /// Returns: u64
-pub const sol_invoke_signed_rust = @as(*align(1) const fn([*]const u8, [*]const u8, u64, [*]const u8, u64) u64, @ptrFromInt(0xd7449092));
+pub const sol_invoke_signed_rust = @as(*align(1) const fn ([*]const u8, [*]const u8, u64, [*]const u8, u64) u64, @ptrFromInt(0xd7449092));
 
 /// sol_set_return_data
 /// Hash: 0xa226d3eb
 /// Parameters:
 ///   - data: [*]const u8
 ///   - length: u64
-pub const sol_set_return_data = @as(*align(1) const fn([*]const u8, u64) void, @ptrFromInt(0xa226d3eb));
+pub const sol_set_return_data = @as(*align(1) const fn ([*]const u8, u64) void, @ptrFromInt(0xa226d3eb));
 
 /// sol_get_return_data
 /// Hash: 0x5d2245e4
@@ -137,12 +137,12 @@ pub const sol_set_return_data = @as(*align(1) const fn([*]const u8, u64) void, @
 ///   - length: u64
 ///   - program_id: [*]u8
 /// Returns: u64
-pub const sol_get_return_data = @as(*align(1) const fn([*]u8, u64, [*]u8) u64, @ptrFromInt(0x5d2245e4));
+pub const sol_get_return_data = @as(*align(1) const fn ([*]u8, u64, [*]u8) u64, @ptrFromInt(0x5d2245e4));
 
 /// sol_get_stack_height
 /// Hash: 0x85532d94
 /// Returns: u64
-pub const sol_get_stack_height = @as(*align(1) const fn() u64, @ptrFromInt(0x85532d94));
+pub const sol_get_stack_height = @as(*align(1) const fn () u64, @ptrFromInt(0x85532d94));
 
 /// sol_create_program_address
 /// Hash: 0x9377323c
@@ -152,7 +152,7 @@ pub const sol_get_stack_height = @as(*align(1) const fn() u64, @ptrFromInt(0x855
 ///   - program_id_addr: [*]const u8
 ///   - address_bytes_addr: [*]const u8
 /// Returns: u64
-pub const sol_create_program_address = @as(*align(1) const fn([*]const u8, u64, [*]const u8, [*]const u8) u64, @ptrFromInt(0x9377323c));
+pub const sol_create_program_address = @as(*align(1) const fn ([*]const u8, u64, [*]const u8, [*]const u8) u64, @ptrFromInt(0x9377323c));
 
 /// sol_try_find_program_address
 /// Hash: 0x48504a38
@@ -163,7 +163,7 @@ pub const sol_create_program_address = @as(*align(1) const fn([*]const u8, u64, 
 ///   - address_bytes_addr: [*]const u8
 ///   - bump_seed_addr: [*]const u8
 /// Returns: u64
-pub const sol_try_find_program_address = @as(*align(1) const fn([*]const u8, u64, [*]const u8, [*]const u8, [*]const u8) u64, @ptrFromInt(0x48504a38));
+pub const sol_try_find_program_address = @as(*align(1) const fn ([*]const u8, u64, [*]const u8, [*]const u8, [*]const u8) u64, @ptrFromInt(0x48504a38));
 
 /// sol_secp256k1_recover
 /// Hash: 0x17e40350
@@ -173,7 +173,7 @@ pub const sol_try_find_program_address = @as(*align(1) const fn([*]const u8, u64
 ///   - signature: [*]const u8
 ///   - result: [*]u8
 /// Returns: u64
-pub const sol_secp256k1_recover = @as(*align(1) const fn([*]const u8, u64, [*]const u8, [*]u8) u64, @ptrFromInt(0x17e40350));
+pub const sol_secp256k1_recover = @as(*align(1) const fn ([*]const u8, u64, [*]const u8, [*]u8) u64, @ptrFromInt(0x17e40350));
 
 /// sol_poseidon
 /// Hash: 0xc4947c21
@@ -184,12 +184,12 @@ pub const sol_secp256k1_recover = @as(*align(1) const fn([*]const u8, u64, [*]co
 ///   - val_len: u64
 ///   - hash_result: [*]u8
 /// Returns: u64
-pub const sol_poseidon = @as(*align(1) const fn(u64, u64, [*]const u8, u64, [*]u8) u64, @ptrFromInt(0xc4947c21));
+pub const sol_poseidon = @as(*align(1) const fn (u64, u64, [*]const u8, u64, [*]u8) u64, @ptrFromInt(0xc4947c21));
 
 /// sol_remaining_compute_units
 /// Hash: 0xedef5aee
 /// Returns: u64
-pub const sol_remaining_compute_units = @as(*align(1) const fn() u64, @ptrFromInt(0xedef5aee));
+pub const sol_remaining_compute_units = @as(*align(1) const fn () u64, @ptrFromInt(0xedef5aee));
 
 /// sol_alt_bn128_group_op
 /// Hash: 0xae0c318b
@@ -199,7 +199,7 @@ pub const sol_remaining_compute_units = @as(*align(1) const fn() u64, @ptrFromIn
 ///   - input_size: u64
 ///   - result: [*]u8
 /// Returns: u64
-pub const sol_alt_bn128_group_op = @as(*align(1) const fn(u64, [*]const u8, u64, [*]u8) u64, @ptrFromInt(0xae0c318b));
+pub const sol_alt_bn128_group_op = @as(*align(1) const fn (u64, [*]const u8, u64, [*]u8) u64, @ptrFromInt(0xae0c318b));
 
 /// sol_big_mod_exp
 /// Hash: 0x780e4c15
@@ -207,7 +207,7 @@ pub const sol_alt_bn128_group_op = @as(*align(1) const fn(u64, [*]const u8, u64,
 ///   - params: [*]const u8
 ///   - result: [*]u8
 /// Returns: u64
-pub const sol_big_mod_exp = @as(*align(1) const fn([*]const u8, [*]u8) u64, @ptrFromInt(0x780e4c15));
+pub const sol_big_mod_exp = @as(*align(1) const fn ([*]const u8, [*]u8) u64, @ptrFromInt(0x780e4c15));
 
 /// sol_curve_validate_point
 /// Hash: 0xaa2607ca
@@ -216,7 +216,7 @@ pub const sol_big_mod_exp = @as(*align(1) const fn([*]const u8, [*]u8) u64, @ptr
 ///   - point_addr: [*]const u8
 ///   - result: [*]u8
 /// Returns: u64
-pub const sol_curve_validate_point = @as(*align(1) const fn(u64, [*]const u8, [*]u8) u64, @ptrFromInt(0xaa2607ca));
+pub const sol_curve_validate_point = @as(*align(1) const fn (u64, [*]const u8, [*]u8) u64, @ptrFromInt(0xaa2607ca));
 
 /// sol_curve_group_op
 /// Hash: 0xdd1c41a6
@@ -227,7 +227,7 @@ pub const sol_curve_validate_point = @as(*align(1) const fn(u64, [*]const u8, [*
 ///   - right_input_addr: [*]const u8
 ///   - result_point_addr: [*]u8
 /// Returns: u64
-pub const sol_curve_group_op = @as(*align(1) const fn(u64, u64, [*]const u8, [*]const u8, [*]u8) u64, @ptrFromInt(0xdd1c41a6));
+pub const sol_curve_group_op = @as(*align(1) const fn (u64, u64, [*]const u8, [*]const u8, [*]u8) u64, @ptrFromInt(0xdd1c41a6));
 
 /// sol_get_sysvar
 /// Hash: 0x13c1b505
@@ -237,8 +237,7 @@ pub const sol_curve_group_op = @as(*align(1) const fn(u64, u64, [*]const u8, [*]
 ///   - offset: u64
 ///   - length: u64
 /// Returns: u64
-pub const sol_get_sysvar = @as(*align(1) const fn([*]const u8, [*]u8, u64, u64) u64, @ptrFromInt(0x13c1b505));
-
+pub const sol_get_sysvar = @as(*align(1) const fn ([*]const u8, [*]u8, u64, u64) u64, @ptrFromInt(0x13c1b505));
 
 // Convenience helpers
 

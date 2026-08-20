@@ -123,31 +123,41 @@ pub fn createProgramAddress(
     return error.InvalidArgument;
 }
 
+pub const Pda = struct {
+    address: Pubkey,
+    bump: u8,
+};
+
 /// Derive a pubkey from another pubkey, seed, and program ID using SHA256
-pub fn createWithSeed(
-    base: *const Pubkey,
-    seed: []const u8,
-    program_id: *const Pubkey,
-) BuiltinError!Pubkey {
-    if (seed.len > MAX_SEED_LEN) {
-        return error.MaxSeedLengthExceeded;
+pub fn deriveProgramAddress(seeds: []const []const u8, program: *const Pubkey) Pda {
+    var bump: u8 = 0xff;
+
+    var found = false;
+    var candidate: [32]u8 = undefined;
+
+    @setEvalBranchQuota(20_000);
+    while (!found) {
+        var hasher = std.crypto.hash.sha2.Sha256.init(.{});
+
+        for (seeds) |seed| {
+            hasher.update(seed);
+        }
+
+        hasher.update(&.{bump});
+        hasher.update(&program.bytes);
+        hasher.update("ProgramDerivedAddress");
+
+        hasher.final(&candidate);
+
+        if (std.crypto.ecc.Edwards25519.fromBytes(candidate)) |_| {
+            // is on curve, continue searching
+            bump -= 1;
+        } else |_| {
+            found = true;
+        }
     }
-
-    // Check if program_id ends with PDA_MARKER
-    if (std.mem.endsWith(u8, program_id, PDA_MARKER)) {
-        return error.IllegalOwner;
-    }
-
-    var address: Pubkey = undefined;
-
-    // Create array of inputs for hashing
-    const vals = [_][]const u8{ base[0..], seed, program_id[0..] };
-
-    _ = syscalls.sol_sha256(
-        @as([*]const u8, @ptrCast(&vals)),
-        vals.len,
-        &address,
-    );
-
-    return address;
+    return .{
+        .address = .{ .bytes = candidate },
+        .bump = bump,
+    };
 }
