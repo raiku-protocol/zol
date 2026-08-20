@@ -17,20 +17,23 @@ const Cpi = @This();
 
 pub fn invoke(heap: *Heap, program_id: *const Pubkey, accounts: []const Account, data: []const u8) !void {
     var scratch = heap.scratch();
+
     var account_meta = scratch.alloc(abi.AccountMeta, accounts.len);
+    var account_info = scratch.alloc(abi.AccountInfo, accounts.len);
 
     for (0..accounts.len) |i| {
         const a = &accounts[i];
         account_meta[i] = .{
-            .address = a.inner.address,
+            .address = &a.inner.address,
             .signer = a.inner.signer != 0,
             .writable = a.inner.writable != 0,
         };
+        account_info[i] = a.abi_info();
     }
 
     var sol_signers: [0]abi.SignerSeedsC = undefined;
 
-    const instruction = abi.CInstruction{
+    const instruction: abi.CInstruction = .{
         .program_id = program_id,
         .accounts = account_meta.ptr,
         .accounts_len = accounts.len,
@@ -40,7 +43,7 @@ pub fn invoke(heap: *Heap, program_id: *const Pubkey, accounts: []const Account,
 
     const result = syscalls.sol_invoke_signed_c(
         @ptrCast(&instruction),
-        @ptrCast(accounts.ptr),
+        @ptrCast(account_info.ptr),
         accounts.len,
         @ptrCast(&sol_signers),
         0,

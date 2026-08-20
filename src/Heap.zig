@@ -33,7 +33,7 @@ pub fn free(self: *Heap, T: type, slice: []T) void {
 // Scratch buffer, memory is invalidated and thus 'freed' at end of lifetime
 //
 // Caller is responsible for keeping only one scratch alive at a time.
-pub fn scratch(self: *Heap) Heap {
+pub fn scratch(self: Heap) Heap {
     return .{
         .bump = self.bump,
     };

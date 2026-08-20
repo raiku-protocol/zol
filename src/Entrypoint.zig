@@ -15,11 +15,10 @@ const Account = types.Account;
 const BuiltinError = errors.Builtin;
 
 pub const Entrypoint = @This();
-pub const stack_accounts = 4;
 
 program_id: Pubkey,
 accounts: []Account,
-data: []const u8,
+data: []u8,
 heap: Heap,
 
 pub fn parse(input: [*]align(8) u8) Entrypoint {
@@ -61,7 +60,7 @@ const Parser = struct {
         return u;
     }
 
-    fn readSlice(self: *Self, len: usize) []const u8 {
+    fn readSlice(self: *Self, len: usize) []u8 {
         const slice = self.input[0..len];
         self.input = self.input[len..];
         return slice;
@@ -79,32 +78,19 @@ const Parser = struct {
         const acc: *abi.Account = @ptrCast(@alignCast(self.input));
         self.input = self.input[@sizeOf(abi.Account)..];
 
-        const data: [*]u8 = @ptrCast(self.input);
-
         const buffer_len = acc.data_len + constants.growth_buffer_size;
-        const buffer = self.input[0..buffer_len];
-        _ = buffer; // autofix
+        const buffer: []u8 = self.input[0..buffer_len];
 
         // we want to align _AND_ skip 8 bytes (rent epoch)
         const seven: usize = 7;
-        const aligned: usize = (buffer_len + 7) & ~seven;
-        const skip_epoch = aligned + 8;
+        const aligned: usize = (buffer_len + seven) & ~seven;
+        const skip = aligned + 8;
 
-        self.input = self.input[skip_epoch..];
-
-        const info: abi.AccountInfo = .{
-            .address = &acc.address,
-            .lamports = &acc.lamports,
-            .data_len = acc.data_len,
-            .data = data,
-            .owner = &acc.owner,
-            .signer = acc.signer,
-            .writable = acc.writable,
-            .executable = acc.executable,
-        };
+        self.input = self.input[skip..];
 
         return .{
-            .inner = info,
+            .inner = acc,
+            .buffer = buffer,
         };
     }
 

@@ -46,7 +46,7 @@ pub const AccountMeta = extern struct {
 
 pub const CInstruction = extern struct {
     program_id: *const Pubkey,
-    accounts: [*]AccountMeta,
+    accounts: [*]const AccountMeta,
     accounts_len: u64,
     data: [*]const u8,
     data_len: u64,
