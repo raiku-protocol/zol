@@ -15,21 +15,16 @@ const BuiltinError = errors.Builtin;
 
 const Cpi = @This();
 
-pub fn invoke(heap: *Heap, program_id: *const Pubkey, accounts: []const Account, data: []const u8) !void {
-    var account_info = heap.alloc(abi.AccountInfo, accounts.len);
-    // defer heap.free(abi.AccountInfo, account_info);
-
-    var account_meta = heap.alloc(abi.AccountMeta, accounts.len);
-    // defer heap.free(abi.AccountMeta, account_meta);
+pub fn invoke(program_id: *const Pubkey, accounts: []const Account, data: []const u8) !void {
+    var account_meta: [32]abi.AccountMeta = undefined;
 
     for (0..accounts.len) |i| {
         const a = &accounts[i];
         account_meta[i] = .{
-            .address = &a.inner.address,
-            .signer = a.permissions.signer,
-            .writable = a.permissions.writable,
+            .address = a.inner.address,
+            .signer = a.inner.signer != 0,
+            .writable = a.inner.writable != 0,
         };
-        account_info[i] = a.info();
     }
 
     var sol_signers: [0]abi.SignerSeedsC = undefined;
@@ -44,7 +39,7 @@ pub fn invoke(heap: *Heap, program_id: *const Pubkey, accounts: []const Account,
 
     const result = syscalls.sol_invoke_signed_c(
         @ptrCast(&instruction),
-        @ptrCast(&account_info[0]),
+        @ptrCast(accounts.ptr),
         accounts.len,
         @ptrCast(&sol_signers),
         0,

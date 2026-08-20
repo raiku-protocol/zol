@@ -32,33 +32,31 @@ pub const Permissions = struct {
     signer: bool = false,
 };
 
-pub const Account = struct {
-    inner: *abi.Account,
-    permissions: Permissions,
-    buffer: []u8,
+// The extern qualifier guarantes ABI compatability with AccountInfo
+pub const Account = extern struct {
+    inner: abi.AccountInfo,
 
-    pub fn with_permissions(self: Account, permissions: Permissions) Account {
-        return .{
-            .inner = self.inner,
-            .permissions = permissions,
-            .buffer = self.buffer,
-        };
+    pub fn restrict(self: Account, permissions: Permissions) Account {
+        var copy = self.inner;
+        copy.writable = if (permissions.writable) 1 else 0;
+        copy.signer = if (permissions.signer) 1 else 0;
+        return .{ .inner = copy };
     }
 
-    pub fn lamports(self: Account) u64 {
+    pub fn lamports(self: Account) *u64 {
         return self.inner.lamports;
     }
 
-    pub fn owner(self: Account) Pubkey {
+    pub fn owner(self: Account) *const Pubkey {
         return self.inner.owner;
     }
 
-    pub fn address(self: Account) Pubkey {
+    pub fn address(self: Account) *const Pubkey {
         return self.inner.address;
     }
 
     pub fn data(self: Account) []u8 {
-        return self.buffer[0..self.inner.data_len];
+        return self.inner.data[0..self.inner.data_len];
     }
 
     pub fn signer(self: Account) bool {
@@ -71,18 +69,5 @@ pub const Account = struct {
 
     pub fn executable(self: Account) bool {
         return self.inner.executable != 0;
-    }
-
-    pub fn info(self: Account) abi.AccountInfo {
-        return .{
-            .address = &self.inner.address,
-            .lamports = &self.inner.lamports,
-            .data_len = self.inner.data_len,
-            .data = self.buffer.ptr,
-            .owner = &self.inner.owner,
-            .is_signer = self.inner.signer,
-            .is_writable = self.inner.writable,
-            .executable = self.inner.executable,
-        };
     }
 };

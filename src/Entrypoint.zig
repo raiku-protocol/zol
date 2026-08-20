@@ -84,8 +84,11 @@ const Parser = struct {
         const acc: *abi.Account = @ptrCast(@alignCast(self.input));
         self.input = self.input[@sizeOf(abi.Account)..];
 
+        const data: [*]u8 = @ptrCast(self.input);
+
         const buffer_len = acc.data_len + constants.growth_buffer_size;
         const buffer = self.input[0..buffer_len];
+        _ = buffer; // autofix
 
         // we want to align _AND_ skip 8 bytes (rent epoch)
         const seven: usize = 7;
@@ -94,13 +97,19 @@ const Parser = struct {
 
         self.input = self.input[skip_epoch..];
 
+        const info: abi.AccountInfo = .{
+            .address = &acc.address,
+            .lamports = &acc.lamports,
+            .data_len = acc.data_len,
+            .data = data,
+            .owner = &acc.owner,
+            .signer = acc.signer,
+            .writable = acc.writable,
+            .executable = acc.executable,
+        };
+
         return .{
-            .inner = acc,
-            .buffer = buffer,
-            .permissions = .{
-                .signer = acc.signer != 0,
-                .writable = acc.writable != 0,
-            },
+            .inner = info,
         };
     }
 

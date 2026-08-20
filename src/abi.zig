@@ -8,8 +8,8 @@ pub const AccountInfo = extern struct {
     owner: *const Pubkey,
     /// rent_epoch is deprecated
     _deprecated: u64 = 0,
-    is_signer: u8,
-    is_writable: u8,
+    signer: u8,
+    writable: u8,
     executable: u8,
     padding: u8 = 0,
 };
