@@ -15,8 +15,9 @@ const BuiltinError = errors.Builtin;
 
 const Cpi = @This();
 
-pub fn invoke(program_id: *const Pubkey, accounts: []const Account, data: []const u8) !void {
-    var account_meta: [32]abi.AccountMeta = undefined;
+pub fn invoke(heap: *Heap, program_id: *const Pubkey, accounts: []const Account, data: []const u8) !void {
+    var scratch = heap.scratch();
+    var account_meta = scratch.alloc(abi.AccountMeta, accounts.len);
 
     for (0..accounts.len) |i| {
         const a = &accounts[i];
@@ -31,9 +32,9 @@ pub fn invoke(program_id: *const Pubkey, accounts: []const Account, data: []cons
 
     const instruction = abi.CInstruction{
         .program_id = program_id,
-        .accounts = &account_meta[0],
+        .accounts = account_meta.ptr,
         .accounts_len = accounts.len,
-        .data = &data[0],
+        .data = data.ptr,
         .data_len = data.len,
     };
 

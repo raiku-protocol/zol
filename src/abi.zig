@@ -28,13 +28,13 @@ pub const Account = extern struct {
 
 /// C-ABI signer seed (SolSignerSeedC in Agave)
 pub const SignerSeedC = extern struct {
-    ptr: *const u8,
+    ptr: [*]const u8,
     len: u64,
 };
 
 /// C-ABI signer seeds (SolSignerSeedsC in Agave)
 pub const SignerSeedsC = extern struct {
-    ptr: *const SignerSeedC, // Pointer to array of SignerSeedC
+    ptr: [*]const SignerSeedC, // Pointer to array of SignerSeedC
     len: u64,
 };
 
@@ -46,8 +46,8 @@ pub const AccountMeta = extern struct {
 
 pub const CInstruction = extern struct {
     program_id: *const Pubkey,
-    accounts: *const AccountMeta,
+    accounts: [*]AccountMeta,
     accounts_len: u64,
-    data: *const u8,
+    data: [*]const u8,
     data_len: u64,
 };
