@@ -11,3 +11,8 @@ pub fn alloc(self: *Heap, T: type, len: usize) []T {
     self.bump += len * @sizeOf(T);
     return slice_start[0..len];
 }
+
+// TODO: add debug verification
+pub fn free(self: *Heap, T: type, slice: []T) void {
+    self.bump = @intFromPtr(slice.ptr);
+}

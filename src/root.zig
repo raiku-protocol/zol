@@ -1,14 +1,16 @@
 const errors = @import("errors.zig");
 const syscalls = @import("syscalls.zig");
 
-const entrypoint = @import("entrypoint.zig");
 const pda = @import("pda.zig");
 
 pub const types = @import("types.zig");
 pub const abi = @import("abi.zig");
 pub const log = @import("log.zig");
 
-pub const cpi = @import("cpi.zig");
+pub const Entrypoint = @import("Entrypoint.zig");
+pub const Cpi = @import("Cpi.zig");
+pub const Heap = @import("Heap.zig");
+
 pub const debug = @import("debug.zig").debug;
 pub const constants = @import("constants.zig");
 
@@ -17,10 +19,6 @@ pub const errorToU64 = errors.errorToU64;
 
 pub const Pubkey = types.Pubkey;
 pub const Account = types.Account;
-
-pub const pubkeyEq = types.pubkeyEq;
-pub const parseArgs = entrypoint.parseArgs;
-pub const Args = entrypoint.Args;
 
 pub const logPubkey = log.logPubkey;
 pub const logMsg = log.log;

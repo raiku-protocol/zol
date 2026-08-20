@@ -3,6 +3,7 @@
 const std = @import("std");
 const syscalls = @import("syscalls.zig");
 const constants = @import("constants.zig");
+const Heap = @import("Heap.zig");
 const types = @import("types.zig");
 const abi = @import("abi.zig");
 const errors = @import("errors.zig");
@@ -13,13 +14,48 @@ const Pubkey = types.Pubkey;
 const Account = types.Account;
 const BuiltinError = errors.Builtin;
 
-pub const Args = struct {
-    program_id: Pubkey,
-    accounts: []Account,
-    data: []const u8,
-};
+pub const Entrypoint = @This();
 
-pub const Parser = struct {
+program_id: Pubkey,
+accounts: []Account,
+data: []const u8,
+heap: Heap,
+
+pub fn parse(input: [*]align(8) u8) *Entrypoint {
+    var parser: Parser = .{ .input = input };
+    var heap: Heap = .{};
+
+    const entry = &heap.alloc(Entrypoint, 1)[0];
+
+    const num_accounts = parser.readU64();
+
+    var accounts = heap.alloc(Account, num_accounts);
+
+    for (0..num_accounts) |i| {
+        const peek = parser.peek();
+        if (peek == 0xff) {
+            if (i < accounts.len) accounts[i] = parser.readAccount();
+        } else {
+            if (i < accounts.len) accounts[i] = accounts[peek];
+            parser.advanceWord();
+        }
+    }
+
+    const instruction_data_len = parser.readU64();
+    const data = parser.readSlice(instruction_data_len);
+    const program_id = parser.readPubkey();
+
+    entry.* = .{
+        .data = data,
+        .program_id = program_id,
+        .accounts = accounts,
+        .heap = heap,
+    };
+
+    return entry;
+}
+
+const Parser = struct {
     input: [*]u8,
 
     const Self = @This();
@@ -76,32 +112,3 @@ pub const Parser = struct {
         };
     }
 };
-
-pub fn parseArgs(
-    input: [*]align(8) u8,
-    accounts: []Account,
-) Args {
-    var parser: Parser = .{ .input = input };
-
-    const num_accounts = parser.readU64();
-
-    for (0..num_accounts) |i| {
-        const peek = parser.peek();
-        if (peek == 0xff) {
-            if (i < accounts.len) accounts[i] = parser.readAccount();
-        } else {
-            if (i < accounts.len) accounts[i] = accounts[peek];
-            parser.advanceWord();
-        }
-    }
-
-    const instruction_data_len = parser.readU64();
-    const data = parser.readSlice(instruction_data_len);
-    const program_id = parser.readPubkey();
-
-    return .{
-        .data = data,
-        .program_id = program_id,
-        .accounts = accounts[0..@min(accounts.len, num_accounts)],
-    };
-}
