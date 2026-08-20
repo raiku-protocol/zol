@@ -15,44 +15,67 @@ const Account = types.Account;
 const BuiltinError = errors.Builtin;
 
 pub const Entrypoint = @This();
+pub const stack_accounts = 4;
+
+const Accounts = union(enum) {
+    stack: struct {
+        len: usize,
+        buffer: [stack_accounts]Account,
+    },
+    heap: []Account,
+
+    fn accounts(self: *Accounts) []Account {
+        return switch (self.*) {
+            .heap => |heap| heap,
+            .stack => |*stack| stack.buffer[0..stack.len],
+        };
+    }
+};
 
 program_id: Pubkey,
+parsed_accounts: Accounts,
 accounts: []Account,
 data: []const u8,
 heap: Heap,
 
-pub fn parse(input: [*]align(8) u8) *Entrypoint {
+pub fn parse(input: [*]align(8) u8) Entrypoint {
     var parser: Parser = .{ .input = input };
+    const buffer: [stack_accounts]Account = undefined;
     var heap: Heap = .{};
-
-    const entry = &heap.alloc(Entrypoint, 1)[0];
 
     const num_accounts = parser.readU64();
 
-    var accounts = heap.alloc(Account, num_accounts);
+    var parsed_accounts: Accounts = undefined;
+
+    if (num_accounts > buffer.len) {
+        parsed_accounts = .{ .heap = heap.alloc(Account, num_accounts) };
+    } else {
+        parsed_accounts = .{
+            .stack = .{ .buffer = undefined, .len = num_accounts },
+        };
+    }
+
+    var accounts = parsed_accounts.accounts();
 
     for (0..num_accounts) |i| {
         const peek = parser.peek();
         if (peek == 0xff) {
-            if (i < accounts.len) accounts[i] = parser.readAccount();
+            accounts[i] = parser.readAccount();
         } else {
-            if (i < accounts.len) accounts[i] = accounts[peek];
+            accounts[i] = accounts[peek];
             parser.advanceWord();
         }
     }
 
     const instruction_data_len = parser.readU64();
-    const data = parser.readSlice(instruction_data_len);
-    const program_id = parser.readPubkey();
 
-    entry.* = .{
-        .data = data,
-        .program_id = program_id,
+    return .{
+        .data = parser.readSlice(instruction_data_len),
+        .program_id = parser.readPubkey(),
+        .parsed_accounts = parsed_accounts,
         .accounts = accounts,
         .heap = heap,
     };
-
-    return entry;
 }
 
 const Parser = struct {

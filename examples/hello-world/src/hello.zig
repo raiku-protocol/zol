@@ -2,7 +2,7 @@ const std = @import("std");
 const zol = @import("zol");
 
 const Account = zol.Account;
-const Args = zol.Args;
+const Entrypoint = zol.Entrypoint;
 
 const Error = error{
     NoHello,
@@ -15,11 +15,9 @@ const Tag = enum(u64) {
     _,
 };
 
-/// Program entrypoint
 export fn entrypoint(input: [*]align(8) u8) u64 {
-    var accounts: [1]*Account = undefined;
-
-    dispatch(zol.parseArgs(input, &accounts)) catch |e| {
+    var entry = Entrypoint.parse(input);
+    dispatch(&entry) catch |e| {
         switch (e) {
             error.NoHello => return 1,
             else => |builtin| return zol.errorToU64(builtin),
@@ -29,8 +27,8 @@ export fn entrypoint(input: [*]align(8) u8) u64 {
     return 0;
 }
 
-fn dispatch(args: Args) Error!void {
-    switch (@as(Tag, @enumFromInt(std.mem.bytesToValue(u64, args.data[0..8])))) {
+fn dispatch(entry: *Entrypoint) Error!void {
+    switch (@as(Tag, @enumFromInt(std.mem.bytesToValue(u64, entry.data[0..8])))) {
         Tag.Friendly => zol.logMsg(
             \\Hello world!
         ),
