@@ -16,7 +16,7 @@ const BuiltinError = errors.Builtin;
 
 pub const Entrypoint = @This();
 
-program_id: Pubkey,
+program_id: *const Pubkey,
 accounts: []Account,
 data: []u8,
 heap: Heap,
@@ -43,7 +43,7 @@ pub fn parse(input: [*]align(8) u8) Entrypoint {
 
     return .{
         .data = parser.readSlice(instruction_data_len),
-        .program_id = parser.readPubkey(),
+        .program_id = parser.readPubkeyFinal(),
         .accounts = accounts,
         .heap = heap,
     };
@@ -55,7 +55,7 @@ const Parser = struct {
     const Self = @This();
 
     fn readU64(self: *Self) u64 {
-        const u = std.mem.bytesToValue(u64, self.input[0..8]);
+        const u = std.mem.readInt(u64, self.input[0..8], .little);
         self.input = self.input[8..];
         return u;
     }
@@ -94,11 +94,8 @@ const Parser = struct {
         };
     }
 
-    fn readPubkey(self: *Self) Pubkey {
-        var bytes: [32]u8 = undefined;
-        std.mem.copyForwards(u8, &bytes, self.readSlice(32));
-        return .{
-            .bytes = bytes,
-        };
+    fn readPubkeyFinal(self: *Self) *const Pubkey {
+        // Note that we skip bumping the input, since this read is final
+        return @ptrCast(self.input);
     }
 };

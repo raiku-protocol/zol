@@ -7,7 +7,7 @@ const ProgramError = @import("errors.zig").ProgramError;
 
 /// Public key type
 pub const Pubkey = extern struct {
-    bytes: [32]u8 align(8),
+    bytes: [32]u8,
 
     pub fn eq(a: *const @This(), b: *const @This()) bool {
         return std.mem.eql(u8, &a.bytes, &b.bytes);
