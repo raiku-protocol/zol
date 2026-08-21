@@ -46,7 +46,7 @@ pub fn Cpi(Data: type) type {
             const slice = asBytes(&self.data);
 
             const instruction: abi.CInstruction = .{
-                .program_id = self.program_id.as_bytes(),
+                .program_id = self.program_id,
                 .accounts = account_meta.ptr,
                 .accounts_len = self.accounts.len,
                 .data = slice.ptr,

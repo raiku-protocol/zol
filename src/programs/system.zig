@@ -12,12 +12,13 @@ pub const CreateAccount = struct {
     from: Account,
     to: Account,
     data: Data,
+    signers: []const Signer = &.{},
 
     const Data = packed struct {
         discriminator: u32 = 0,
         lamports: u64,
         space: u64,
-        owner: Pubkey,
+        owner: Pubkey.Packed,
     };
 
     pub fn invoke(self: CreateAccount, heap: *Heap) !void {
@@ -25,6 +26,7 @@ pub const CreateAccount = struct {
             .program_id = &constants.system_program_id,
             .accounts = &.{ self.from, self.to },
             .data = self.data,
+            .signers = self.signers,
         };
         return cpi.invoke(
             heap,
@@ -61,7 +63,7 @@ pub const Assign = struct {
 
     const Data = packed struct {
         discriminator: u32 = 1,
-        new_owner: Pubkey,
+        new_owner: Pubkey.Packed,
     };
 
     pub fn invoke(self: Assign, heap: *Heap) !void {

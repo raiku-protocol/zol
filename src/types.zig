@@ -7,24 +7,19 @@ const Heap = @import("Heap.zig");
 const ProgramError = @import("errors.zig").ProgramError;
 
 /// Public key type
-/// using packed representation to allow inclusion in packed structs
-pub const Pubkey = packed struct {
-    a: u64,
-    b: u64,
-    c: u64,
-    d: u64,
+pub const Pubkey = extern struct {
+    bytes: [32]u8,
+
+    pub const Packed = packed struct {
+        backing: u256,
+
+        pub fn eq(self: Packed, other: *const Pubkey) bool {
+            return std.mem.eql(u8, std.mem.asBytes(&self.backing), &other.bytes);
+        }
+    };
 
     pub fn eq(self: *const @This(), other: *const @This()) bool {
-        return true and
-            self.a == other.a and
-            self.b == other.b and
-            self.c == other.c and
-            self.d == other.d;
-    }
-
-    pub fn as_bytes(self: *const @This()) *const [32]u8 {
-        const ptr: [*]const u8 = @ptrCast(self);
-        return ptr[0..32];
+        return std.mem.eql(u8, &self.bytes, &other.bytes);
     }
 
     pub fn b58(comptime str: []const u8) @This() {
@@ -37,16 +32,11 @@ pub const Pubkey = packed struct {
         var buf: [32]u8 = undefined;
         const slice = try base58.decode32(&buf, bytes);
         if (slice.len != buf.len) return error.InvalidPubkey;
-        return Pubkey.from_bytes(buf);
+        return .{ .bytes = buf };
     }
 
-    pub fn from_bytes(bytes: [32]u8) @This() {
-        return .{
-            .a = std.mem.readInt(u64, bytes[0..8], .little),
-            .b = std.mem.readInt(u64, bytes[8..16], .little),
-            .c = std.mem.readInt(u64, bytes[16..24], .little),
-            .d = std.mem.readInt(u64, bytes[24..32], .little),
-        };
+    pub fn pack(self: Pubkey) Packed {
+        return .{ .backing = std.mem.readInt(u256, &self.bytes, .little) };
     }
 };
 
@@ -73,16 +63,16 @@ pub const Account = struct {
         return self.inner.lamports;
     }
 
-    pub fn owner(self: Account) Pubkey {
-        return Pubkey.from_bytes(self.inner.owner);
+    pub fn owner(self: Account) *const Pubkey {
+        return &self.inner.owner;
     }
 
-    pub fn owned_by(self: Account, other: Pubkey) bool {
-        return std.mem.eql(u8, other.as_bytes(), &self.inner.owner);
+    pub fn owned_by(self: Account, other: *const Pubkey) bool {
+        return self.inner.owner.eq(other);
     }
 
-    pub fn address(self: Account) Pubkey {
-        return Pubkey.from_bytes(self.inner.address);
+    pub fn address(self: Account) *const Pubkey {
+        return &self.inner.address;
     }
 
     pub fn data(self: Account) []align(8) u8 {

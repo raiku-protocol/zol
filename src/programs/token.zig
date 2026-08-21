@@ -2,10 +2,10 @@ const Pubkey = @import("../types.zig").Pubkey;
 
 pub const AccountData = packed struct {
     /// The mint associated with this account
-    mint: Pubkey,
+    mint: Pubkey.Packed,
 
     /// The owner of this account.
-    owner: Pubkey,
+    owner: Pubkey.Packed,
 
     /// The amount of tokens this account holds.
     amount: u64,
@@ -15,7 +15,7 @@ pub const AccountData = packed struct {
 
     /// If `delegate` is `Some` then `delegated_amount` represents
     /// the amount authorized by the delegate.
-    delegate: Pubkey,
+    delegate: Pubkey.Packed,
 
     /// The account's state.
     state: u8,
@@ -36,5 +36,5 @@ pub const AccountData = packed struct {
     close_authority_flag: u32,
 
     /// Optional authority to close the account.
-    close_authority: Pubkey,
+    close_authority: Pubkey.Packed,
 };

@@ -16,7 +16,7 @@ const BuiltinError = errors.Builtin;
 
 pub const Entrypoint = @This();
 
-program_id: Pubkey,
+program_id: *const Pubkey,
 accounts: []Account,
 data: []u8,
 heap: Heap,
@@ -98,8 +98,8 @@ const Parser = struct {
         };
     }
 
-    fn readPubkeyFinal(self: *Self) Pubkey {
+    fn readPubkeyFinal(self: *Self) *const Pubkey {
         // Note that we skip bumping the input, since this read is final
-        return Pubkey.from_bytes(self.input[0..32].*);
+        return @ptrCast(self.input);
     }
 };
