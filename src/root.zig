@@ -1,6 +1,6 @@
 pub const abi = @import("abi.zig");
 pub const constants = @import("constants.zig");
-pub const Cpi = @import("Cpi.zig");
+pub const cpi = @import("cpi.zig");
 pub const debug = @import("debug.zig").debug;
 pub const Entrypoint = @import("Entrypoint.zig");
 const errors = @import("errors.zig");
@@ -24,4 +24,5 @@ pub const Account = types.Account;
 test {
     _ = debug;
     _ = pda;
+    _ = cpi;
 }

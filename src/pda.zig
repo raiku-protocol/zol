@@ -144,7 +144,7 @@ pub fn deriveProgramAddress(seeds: []const []const u8, program: *const Pubkey) P
         }
 
         hasher.update(&.{bump});
-        hasher.update(&program.bytes);
+        hasher.update(program.as_bytes());
         hasher.update("ProgramDerivedAddress");
 
         hasher.final(&candidate);
@@ -157,7 +157,7 @@ pub fn deriveProgramAddress(seeds: []const []const u8, program: *const Pubkey) P
         }
     }
     return .{
-        .address = .{ .bytes = candidate },
+        .address = Pubkey.from_bytes(candidate),
         .bump = bump,
     };
 }

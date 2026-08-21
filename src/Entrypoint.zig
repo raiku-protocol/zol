@@ -90,7 +90,7 @@ const Parser = struct {
 
         return .{
             .inner = acc,
-            .backing_buffer = buffer,
+            .backing_buffer = @alignCast(buffer),
             .permissions = .{
                 .writable = acc.writable != 0,
                 .signer = acc.signer != 0,

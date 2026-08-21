@@ -97,16 +97,12 @@ pub fn Cpi(Data: type) type {
                         else => @compileError("sub-struct needs to be packed as well"),
                     }
                 },
-                .pointer => |p| {
-                    _ = p; // autofix
-                    // if (p.size == .slice) {
-                    return &.{ 0xca, 0xfe };
-                    // }
+                .pointer => {
+                    return data.*;
                 },
                 .int => |i| {
                     if (i.bits % 8 != 0) @compileError("Integer bitsize needs to be a multiple of 8");
-                    // return std.mem.asBytes(&data);
-                    return &.{ 0xbe, 0xef };
+                    return std.mem.asBytes(data);
                 },
                 else => @compileError("Unsupported data type"),
             }
