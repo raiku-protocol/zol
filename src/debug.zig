@@ -71,7 +71,7 @@ pub fn debug(data: []const u8) void {
     var offset: usize = 0;
 
     const addr = start - skip;
-    const rows = (data.len + skip - 1) / 8 + 1;
+    const rows = ((data.len + skip - 1) / 8) + 1;
 
     var zeroes: usize = 0;
 

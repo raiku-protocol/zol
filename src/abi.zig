@@ -1,4 +1,4 @@
-const Pubkey = @import("types.zig").Pubkey;
+pub const Pubkey = [32]u8;
 
 pub const AccountInfo = extern struct {
     address: *const Pubkey,
